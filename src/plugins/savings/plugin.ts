@@ -53,6 +53,19 @@ type ExecutionActions<
       GetAccountParameter<TAccount> &
       GetContextParameter<TContext>
   ) => Promise<SendUserOperationResult<TEntryPointVersion>>;
+
+  pauseAutomation: (
+    args: Pick<
+      EncodeFunctionDataParameters<
+        typeof SavingsPluginExecutionFunctionAbi,
+        "pauseAutomation"
+      >,
+      "args"
+    > &
+      UserOperationOverridesParameter<TEntryPointVersion> &
+      GetAccountParameter<TAccount> &
+      GetContextParameter<TContext>
+  ) => Promise<SendUserOperationResult<TEntryPointVersion>>;
 };
 
 type InstallArgs = [];
@@ -90,6 +103,16 @@ type ReadAndEncodeActions = {
       "args"
     >
   ) => Hex;
+
+  encodePauseAutomation: (
+    args: Pick<
+      EncodeFunctionDataParameters<
+        typeof SavingsPluginExecutionFunctionAbi,
+        "pauseAutomation"
+      >,
+      "args"
+    >
+  ) => Hex;
 };
 
 export type SavingsPluginActions<
@@ -104,7 +127,7 @@ export type SavingsPluginActions<
   ReadAndEncodeActions;
 
 const addresses = {
-  11155111: "0xD0375320591ff87797CEb03CBeE80C82fD61BC77" as Address,
+  11155111: "0xd35B519d08d96188BB89dF874ED48314De84325b" as Address,
 } as Record<number, Address>;
 
 export const SavingsPlugin: Plugin<typeof SavingsPluginAbi> = {
@@ -154,6 +177,26 @@ export const savingsPluginActions: <
     const uo = encodeFunctionData({
       abi: SavingsPluginExecutionFunctionAbi,
       functionName: "createAutomation",
+      args,
+    });
+
+    return client.sendUserOperation({ uo, overrides, account, context });
+  },
+  pauseAutomation({ args, overrides, context, account = client.account }) {
+    if (!account) {
+      throw new AccountNotFoundError();
+    }
+    if (!isSmartAccountClient(client)) {
+      throw new IncompatibleClientError(
+        "SmartAccountClient",
+        "pauseAutomation",
+        client
+      );
+    }
+
+    const uo = encodeFunctionData({
+      abi: SavingsPluginExecutionFunctionAbi,
+      functionName: "pauseAutomation",
       args,
     });
 
@@ -229,6 +272,13 @@ export const savingsPluginActions: <
       args,
     });
   },
+  encodePauseAutomation({ args }) {
+    return encodeFunctionData({
+      abi: SavingsPluginExecutionFunctionAbi,
+      functionName: "pauseAutomation",
+      args,
+    });
+  },
 });
 
 export const SavingsPluginExecutionFunctionAbi = [
@@ -239,6 +289,15 @@ export const SavingsPluginExecutionFunctionAbi = [
       { name: "automationIndex", type: "uint256", internalType: "uint256" },
       { name: "savingsAccount", type: "address", internalType: "address" },
       { name: "roundUpTo", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "pauseAutomation",
+    inputs: [
+      { name: "automationIndex", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -294,11 +353,20 @@ export const SavingsPluginAbi = [
   },
   {
     type: "function",
+    name: "pauseAutomation",
+    inputs: [
+      { name: "automationIndex", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "pluginManifest",
     inputs: [],
     outputs: [
       {
-        name: "",
+        name: "manifest",
         type: "tuple",
         internalType: "struct PluginManifest",
         components: [
@@ -657,9 +725,9 @@ export const SavingsPluginAbi = [
     type: "function",
     name: "userOpValidationFunction",
     inputs: [
-      { name: "functionId", type: "uint8", internalType: "uint8" },
+      { name: "", type: "uint8", internalType: "uint8" },
       {
-        name: "userOp",
+        name: "",
         type: "tuple",
         internalType: "struct UserOperation",
         components: [
@@ -688,10 +756,30 @@ export const SavingsPluginAbi = [
           { name: "signature", type: "bytes", internalType: "bytes" },
         ],
       },
-      { name: "userOpHash", type: "bytes32", internalType: "bytes32" },
+      { name: "", type: "bytes32", internalType: "bytes32" },
     ],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "nonpayable",
+    stateMutability: "pure",
+  },
+  {
+    type: "event",
+    name: "SavingsDone",
+    inputs: [
+      { name: "user", type: "address", indexed: true, internalType: "address" },
+      {
+        name: "savingsAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
   },
   { type: "error", name: "AlreadyInitialized", inputs: [] },
   { type: "error", name: "InvalidAction", inputs: [] },
