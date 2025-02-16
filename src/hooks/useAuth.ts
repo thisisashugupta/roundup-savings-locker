@@ -31,7 +31,7 @@ export default function useAuth() {
         });
       }
     });
-  }, [capsuleClient.isEmail]);
+  }, []);
 
   return { capsuleClient, isModalOpen, setModalOpen, userState, setUserState };
 }

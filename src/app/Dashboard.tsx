@@ -7,8 +7,16 @@ import useSignWithAlchemy from "@/hooks/useSignWithAlchemy";
 import useSavingsPlugin from "@/hooks/useSavingsPlugin";
 import useViem from "@/hooks/useViem";
 
-type TSPState = { installing: boolean; installed: boolean };
-const defaultSPState: TSPState = { installing: false, installed: false };
+type TSPState = {
+  installing: boolean;
+  installed: boolean;
+  uninstalling: boolean;
+};
+const defaultSPState: TSPState = {
+  installing: false,
+  installed: false,
+  uninstalling: false,
+};
 // savings plugin state
 
 export default function Dashboard({
@@ -18,67 +26,62 @@ export default function Dashboard({
   walletAddress: Address;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
 }) {
+  // State
   const [walletBalance, setWalletBalance] = useState<string>("0");
   const [msca, setMsca] = useState<Address | undefined>();
   const [mscaBalance, setMscaBalance] = useState<string>("0");
   const [extendedAccount, setExtendedAccount] = useState<any>();
   const [savingsAddress, setSavingsAddress] = useState<Address | string>("");
+  const [recipient, setRecipient] = useState<Address | string>("");
   const [SPState, setSPState] = useState<TSPState>(defaultSPState);
+  const [sendingToken, setSendingToken] = useState<boolean>(false);
+  const [creatingAutomation, setCreatingAutomation] = useState<boolean>(false);
 
-  const { getModularAccountAlchemyClient, sendUserOperation } =
-    useSignWithAlchemy();
+  // Hooks
+  const { getModularAccountAlchemyClient, sendToken } = useSignWithAlchemy();
   const {
     getExtendedAccount,
     installSavingsPlugin,
+    uninstallSavingsPlugin,
     isSavingsPluginInstalled,
     createAutomation,
     getSavingsAutomations,
-    sepoliaPluginAddress,
   } = useSavingsPlugin();
   const { getEthBalance } = useViem();
 
-  const sendUO = async () => {
-    sendUserOperation()
-      .then(() => {
-        toast.success("UserOp sent");
-        console.log("UserOp sent");
-      })
-      .catch((e) => {
-        toast.error("Sending UserOp Failed (check console)");
-        console.error("Sending UserOp Failed", e);
-      });
+  // Function Handlers
+  const sendTokenUO = async () => {
+    if (recipient.length !== 42) {
+      toast.error("Invalid receipient address");
+      return;
+    }
+
+    setSendingToken(true);
+    sendToken(extendedAccount, recipient as Address).finally(() =>
+      setSendingToken(false)
+    );
   };
 
-  useEffect(() => {
-    if (msca) {
-      getSavingsAutomations(msca, BigInt(0)).catch((e) => {
-        toast.error("Fetching Savings Automations Failed (check console)");
-        console.error("Fetching Savings Automations Failed", e);
-      });
-    }
-  }, [msca]);
-
   const handleCreateAutomation = async () => {
-    console.log("Creating Automation");
-    console.log("savingsAddress:", savingsAddress);
-
-    if (extendedAccount && savingsAddress) {
-      const args: [bigint, Address, bigint] = [
-        BigInt(0),
-        savingsAddress as Address,
-        BigInt(1000000),
-      ];
-
-      createAutomation(extendedAccount, args)
-        .then(() => {
-          toast.success("Automation Created");
-          console.log("Automation Created");
-        })
-        .catch((e) => {
-          toast.error("Automation Creation Failed (check console)");
-          console.error("Automation Creation Failed", e);
-        });
+    if (!extendedAccount) {
+      toast.error("Extended Account not initialized");
     }
+
+    if (!savingsAddress) {
+      toast.error("Savings Address is required");
+      return;
+    }
+
+    const args: [bigint, Address, bigint] = [
+      BigInt(0),
+      savingsAddress as Address,
+      BigInt(1000000),
+    ];
+
+    setCreatingAutomation(true);
+    createAutomation(extendedAccount, args).finally(() => {
+      setCreatingAutomation(false);
+    });
   };
 
   const handleInstallPlugin = async () => {
@@ -86,17 +89,13 @@ export default function Dashboard({
       setSPState((prev) => ({ ...prev, installing: true }));
       installSavingsPlugin(extendedAccount)
         .then(() => {
-          toast.success("Plugin Installed");
-          console.log("Plugin Installed");
           setSPState((prev) => ({
             ...prev,
-            installed: true,
             installing: false,
+            installed: true,
           }));
         })
-        .catch((e) => {
-          toast.success("Error Installing Plugin (check console)");
-          console.error("Error Installing Plugin", e);
+        .catch(() => {
           setSPState((prev) => ({ ...prev, installing: false }));
         });
     }
@@ -104,24 +103,17 @@ export default function Dashboard({
 
   const handleUninstallPlugin = async () => {
     if (extendedAccount) {
-      setSPState((prev) => ({ ...prev, installing: true }));
-      extendedAccount
-        .uninstallPlugin({
-          pluginAddress: sepoliaPluginAddress as `0x${string}`,
-        })
-        .then((res: any) => {
-          toast.success("Plugin Uninstalled");
-          console.log("Plugin Uninstalled with", res.hash);
+      setSPState((prev) => ({ ...prev, uninstalling: true }));
+      uninstallSavingsPlugin(extendedAccount)
+        .then(() => {
           setSPState((prev) => ({
             ...prev,
-            installed: true,
-            installing: false,
+            uninstalling: false,
+            installed: false,
           }));
         })
-        .catch((e: any) => {
-          toast.success("Error Uninstalling Plugin (check console)");
-          console.error("Error Uninstalling Plugin", e);
-          setSPState((prev) => ({ ...prev, installing: false }));
+        .catch(() => {
+          setSPState((prev) => ({ ...prev, uninstalling: false }));
         });
     }
   };
@@ -139,6 +131,13 @@ export default function Dashboard({
     createMCSA();
   }, []);
 
+  useEffect(() => {
+    if (msca) {
+      getSavingsAutomations(msca, BigInt(0));
+    }
+  }, [msca]);
+
+  // Get wallet balances
   useEffect(() => {
     if (msca) {
       (async () => {
@@ -166,30 +165,47 @@ export default function Dashboard({
             className="w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
             onClick={handleInstallPlugin}
           >
-            Install Module
+            {SPState.installing ? "Installing Plugin ..." : "Install Plugin"}
           </button>
           {/* Create Automation */}
           <button
             className="mt-4 w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
             onClick={handleCreateAutomation}
           >
-            Create Automation
+            {creatingAutomation
+              ? "Creating Automation ..."
+              : "Create Automation"}
           </button>
           {/* Send UserOp */}
+          <div className="mt-5 mb-1">
+            <p className="text-sm text-[#646464]">Enter Recipient Address</p>
+            <input
+              className="w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white"
+              placeholder="0x..."
+              type="text"
+              value={recipient}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setRecipient(e.target.value as Address)
+              }
+            />
+          </div>
           <button
             className="mt-4 w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
-            onClick={sendUO}
+            onClick={sendTokenUO}
           >
-            Send UserOp
+            {sendingToken ? "Sending Token ..." : "Send Token"}
           </button>
           {/* Uninstall Plugin */}
           <button
             className="mt-4 w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
             onClick={handleUninstallPlugin}
           >
-            Uninstall Module
+            {SPState.uninstalling
+              ? "Uninstalling Plugin ..."
+              : "Uninstall Plugin"}
           </button>
         </div>
+
         <div>
           <div className="flex flex-col md:flex-row gap-3">
             {/* Top Card 1 */}
@@ -285,7 +301,7 @@ export default function Dashboard({
               ) : (
                 <div className="my-[43px] flex flex-col items-center justify-center">
                   <p className="w-[180px] text-white text-sm text-center">
-                    Install Locker Module for saving your funds.
+                    Install Locker Plugin for saving your funds.
                   </p>
                 </div>
               )}
@@ -298,10 +314,12 @@ export default function Dashboard({
                 }
               >
                 {SPState.installed
-                  ? "Create Automation"
+                  ? creatingAutomation
+                    ? "Creating Automation..."
+                    : "Create Automation"
                   : SPState.installing
-                  ? "Installing Module..."
-                  : "Install Module"}
+                  ? "Installing Plugin..."
+                  : "Install Plugin"}
               </button>
             </div>
           </div>

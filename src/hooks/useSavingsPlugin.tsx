@@ -9,27 +9,32 @@ import { sepolia } from "viem/chains";
 import { publicClient } from "../clients/publicViemClient";
 
 const useSavingsPlugin = () => {
-  const sepoliaPluginAddress = SavingsPlugin.meta.addresses[sepolia.id];
+  const savingsPluginAddress = SavingsPlugin.meta.addresses[sepolia.id];
 
   const getSavingsAutomations = async (
     userAddress: Address,
     automationIndex: bigint
   ) => {
-    const result = await publicClient.readContract({
-      address: sepoliaPluginAddress,
-      abi: SavingsPluginAbi,
-      functionName: "savingsAutomations",
-      args: [userAddress, automationIndex],
-    });
-
-    console.log("Savings Automations:", result);
-    return result;
+    try {
+      const result = await publicClient.readContract({
+        address: savingsPluginAddress,
+        abi: SavingsPluginAbi,
+        functionName: "savingsAutomations",
+        args: [userAddress, automationIndex],
+      });
+      console.log("Savings Automations:", result);
+      return result;
+    } catch (e) {
+      console.error("Fetching Savings Automations Failed", e);
+      toast.error("Fetching Savings Automations Failed (check console)");
+    }
   };
 
   const isSavingsPluginInstalled = async (extendedAccount: any) => {
     const installedPlugins = await extendedAccount.getInstalledPlugins({});
+    console.log("Installed Plugins:", installedPlugins);
     return installedPlugins.some(
-      (plugin: string) => plugin === sepoliaPluginAddress
+      (plugin: string) => plugin === savingsPluginAddress
     );
   };
 
@@ -38,7 +43,7 @@ const useSavingsPlugin = () => {
     const extendedAccount = modularAccountClient.extend(
       savingsPluginActions as unknown as any
     );
-    console.log("extendedAccount:", extendedAccount);
+    console.log("Extended account address:", extendedAccount.account.address);
     return extendedAccount;
   };
 
@@ -46,14 +51,25 @@ const useSavingsPlugin = () => {
     extendedAccount: any,
     args: [bigint, Address, bigint]
   ) => {
-    // const sampleArgs = [
-    //   BigInt(0),
-    //   "0xFa00D29d378EDC57AA1006946F0fc6230a5E3288",
-    //   BigInt(1000000),
-    // ];
+    console.log("Creating Automation");
+    console.log("savingsAddress:", args[1]);
+    /**
+    const sampleArgs = [
+      BigInt(0), // automationIndex
+      "0xFa00D29d378EDC57AA1006946F0fc6230a5E3288", // savingsAddress
+      BigInt(1000000), // roundUpAmount
+    ]; 
+     */
 
-    const res = await extendedAccount.createAutomation({ args });
-    console.log("Automation created with", res);
+    try {
+      const res = await extendedAccount.createAutomation({ args });
+      console.log("Automation created with userop hash:", res.hash);
+      toast.success(`Automation created`);
+    } catch (e) {
+      console.error("Plugin Installation Failed", e);
+      toast.error("Plugin Installation Failed (check console)");
+      throw e;
+    }
   };
 
   const installSavingsPlugin = async (extendedAccount: any) => {
@@ -62,14 +78,26 @@ const useSavingsPlugin = () => {
       const result = await extendedAccount.installSavingsPlugin({
         args: [],
       });
-      console.log("Plugin Installation Result:", result);
-      toast.success("Plugin Installed");
-      toast.info(`Hash: ${result.hash}`);
-      return result;
+      console.log("Plugin Installed with userop hash:", result.hash);
+      toast.success(`Plugin Installed`);
     } catch (e) {
       toast.error("Plugin Installation Failed (check console)");
       console.error("Plugin Installation Failed", e);
-      throw new Error("Plugin Installation Failed" + e);
+      throw e;
+    }
+  };
+
+  const uninstallSavingsPlugin = async (extendedAccount: any) => {
+    try {
+      const result = await extendedAccount.uninstallPlugin({
+        pluginAddress: savingsPluginAddress as `0x${string}`,
+      });
+      console.log("Plugin Uninstalled with userop hash:", result.hash);
+      toast.success(`Plugin Uninstalled. Hash: ${result.hash}`);
+    } catch (e) {
+      toast.error("Plugin Uninstallation Failed (check console)");
+      console.error("Plugin Uninstallation Failed", e);
+      throw e;
     }
   };
 
@@ -81,12 +109,12 @@ const useSavingsPlugin = () => {
 
   return {
     installSavingsPlugin,
+    uninstallSavingsPlugin,
     getExtendedAccount,
     getInstalledPlugins,
     isSavingsPluginInstalled,
     createAutomation,
     getSavingsAutomations,
-    sepoliaPluginAddress,
   };
 };
 

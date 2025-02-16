@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { toast } from "sonner";
 import {
   createCapsuleAccount,
   createCapsuleViemClient,
@@ -6,24 +6,20 @@ import {
 import { hexStringToBase64, SuccessfulSignatureRes } from "@usecapsule/web-sdk";
 import { sepolia as viemSepolia } from "viem/chains";
 import { WalletClientSigner } from "@alchemy/aa-core";
-import type {
-  BatchUserOperationCallData,
-  SendUserOperationResult,
-} from "@alchemy/aa-core";
-import { encodeFunctionData } from "viem";
 import { http, hashMessage } from "viem";
-import type { WalletClient, LocalAccount, SignableMessage, Hash } from "viem";
+import type {
+  WalletClient,
+  LocalAccount,
+  SignableMessage,
+  Hash,
+  Address,
+} from "viem";
 import capsuleClient from "../clients/capsule/capsule";
+import { encodeAbiParameters } from "viem";
 import { alchemy, sepolia } from "@account-kit/infra";
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
 
-// import { LocalAccountSigner } from "@alchemy/aa-core";
-// import type { BatchUserOperationCallData } from "@alchemy/aa-core";
-// import { encodeFunctionData } from "viem";
-
 const useSignWithAlchemy = () => {
-  const [alchemyClient, setAlchemyClient] = useState<any>();
-
   // Custom Sign Message function (from Capsule docs) to sign messages with Capsule
   async function customSignMessage(message: SignableMessage): Promise<Hash> {
     const hashedMessage = hashMessage(message);
@@ -80,60 +76,45 @@ const useSignWithAlchemy = () => {
     });
 
     console.log("MSCA:", alchemyClient.account.address);
-    setAlchemyClient(alchemyClient);
 
     return alchemyClient;
   };
 
-  const sendUserOperation = async () => {
-    const demoUserOperations: BatchUserOperationCallData = [
-      {
-        target: "0x6cA46FEA522c78065138c4068fF7cA2a1415703c" as `0x${string}`,
-        data: encodeFunctionData({
-          abi: [
-            {
-              constant: false,
-              inputs: [
-                {
-                  name: "_to",
-                  type: "address",
-                },
-                {
-                  name: "_value",
-                  type: "uint256",
-                },
-              ],
-              name: "transfer",
-              outputs: [
-                {
-                  name: "",
-                  type: "bool",
-                },
-              ],
-              payable: false,
-              stateMutability: "nonpayable",
-              type: "function",
-            },
-          ],
-          functionName: "transfer",
-          // Test#4
-          args: ["0xED7c0aE1955F75618e858fb8bb8cB6446468d7Df", BigInt(1500000)],
-        }),
-      },
-    ];
+  const sendToken = async (extendedAccount: any, RECIPIENT: Address) => {
+    const TOKEN_ADDRESS: Address = "0x6cA46FEA522c78065138c4068fF7cA2a1415703c";
+    const AMOUNT = BigInt(1500000);
+    try {
+      const transferData = encodeAbiParameters(
+        [
+          { name: "recipient", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
+        [RECIPIENT, AMOUNT]
+      );
 
-    const userOperationResult: SendUserOperationResult =
-      await alchemyClient.sendUserOperation({
-        uo: demoUserOperations,
+      // Prepend the function selector for the transfer function
+      const transferSelector = "0xa9059cbb"; // This is the selector for `transfer(address,uint256)`
+      const data = transferSelector + transferData.slice(2);
+      const res = await extendedAccount.sendUserOperation({
+        uo: {
+          target: TOKEN_ADDRESS as `0x${string}`,
+          data: data as `0x${string}`,
+          value: BigInt(0),
+        },
       });
 
-    console.log("User Operation Result:", userOperationResult);
-    return userOperationResult.hash;
+      console.log("User Operation Hash:", res.hash);
+      toast.success("UserOp sent");
+      return res.hash;
+    } catch (e) {
+      console.error("Sending UserOp Failed", e);
+      toast.error("Sending UserOp Failed (check console)");
+    }
   };
 
   return {
     getModularAccountAlchemyClient,
-    sendUserOperation,
+    sendToken,
   };
 };
 
