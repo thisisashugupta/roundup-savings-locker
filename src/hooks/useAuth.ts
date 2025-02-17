@@ -8,7 +8,6 @@ export default function useAuth() {
   }>({ loading: true });
   const [isModalOpen, setModalOpen] = useState(false);
 
-  console.log("capsuleClient.isEmail", capsuleClient.isEmail);
   console.log(
     "capsuleClient.currentWalletIds",
     capsuleClient.currentWalletIds?.["EVM"]?.[0]
@@ -31,7 +30,7 @@ export default function useAuth() {
         });
       }
     });
-  }, []);
+  }, [capsuleClient.currentWalletIds?.["EVM"]?.[0]]);
 
   return { capsuleClient, isModalOpen, setModalOpen, userState, setUserState };
 }

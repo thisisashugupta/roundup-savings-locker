@@ -1,7 +1,7 @@
 import { http, createPublicClient } from "viem";
-import { sepolia } from "viem/chains";
+import { viemChain } from "@/config/chains";
 
 export const publicClient = createPublicClient({
-  chain: sepolia,
+  chain: viemChain,
   transport: http(),
 });

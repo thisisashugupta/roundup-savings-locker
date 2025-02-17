@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import useSignWithAlchemy from "@/hooks/useSignWithAlchemy";
 import useSavingsPlugin from "@/hooks/useSavingsPlugin";
 import useViem from "@/hooks/useViem";
+import { USDC } from "@/config/tokens";
+import { viemChain } from "@/config/chains";
 
 type TSPState = {
   installing: boolean;
@@ -19,6 +21,15 @@ const defaultSPState: TSPState = {
 };
 // savings plugin state
 
+type TAutomationState = {
+  creating: boolean;
+  created: boolean;
+};
+const defaultAutomationState: TAutomationState = {
+  creating: false,
+  created: Boolean(localStorage.getItem("automationCreated")),
+};
+
 export default function Dashboard({
   walletAddress,
   setModalOpen,
@@ -28,14 +39,25 @@ export default function Dashboard({
 }) {
   // State
   const [walletBalance, setWalletBalance] = useState<string>("0");
+  const [walletTokenBalance, setWalletTokenBalance] = useState<string>("0");
   const [msca, setMsca] = useState<Address | undefined>();
   const [mscaBalance, setMscaBalance] = useState<string>("0");
+  const [mscaTokenBalance, setMscaTokenBalance] = useState<string>("0");
   const [extendedAccount, setExtendedAccount] = useState<any>();
-  const [savingsAddress, setSavingsAddress] = useState<Address | string>("");
+  const [savingsAddress, setSavingsAddress] = useState<Address | string>(
+    localStorage.getItem("savingsAddress") ?? ""
+  );
+  const [savingsTokenBalance, setSavingsTokenBalance] = useState<string>("0");
+  const [roundUpAmount, setRoundUpAmount] = useState<number>(1000000);
   const [recipient, setRecipient] = useState<Address | string>("");
   const [SPState, setSPState] = useState<TSPState>(defaultSPState);
   const [sendingToken, setSendingToken] = useState<boolean>(false);
-  const [creatingAutomation, setCreatingAutomation] = useState<boolean>(false);
+  const [sendTokenAmount, setSendTokenAmount] = useState<bigint>(
+    BigInt(1500000)
+  );
+  const [automationState, setAutomationState] = useState<TAutomationState>(
+    defaultAutomationState
+  );
 
   // Hooks
   const { getModularAccountAlchemyClient, sendToken } = useSignWithAlchemy();
@@ -47,7 +69,7 @@ export default function Dashboard({
     createAutomation,
     getSavingsAutomations,
   } = useSavingsPlugin();
-  const { getEthBalance } = useViem();
+  const { getEthBalance, getTokenBalance } = useViem();
 
   // Function Handlers
   const sendTokenUO = async () => {
@@ -57,8 +79,8 @@ export default function Dashboard({
     }
 
     setSendingToken(true);
-    sendToken(extendedAccount, recipient as Address).finally(() =>
-      setSendingToken(false)
+    sendToken(extendedAccount, recipient as Address, sendTokenAmount).finally(
+      () => setSendingToken(false)
     );
   };
 
@@ -78,9 +100,13 @@ export default function Dashboard({
       BigInt(1000000),
     ];
 
-    setCreatingAutomation(true);
+    setAutomationState((prev) => ({ ...prev, creating: true }));
     createAutomation(extendedAccount, args).finally(() => {
-      setCreatingAutomation(false);
+      setAutomationState((prev) => ({
+        ...prev,
+        creating: false,
+        created: true,
+      }));
     });
   };
 
@@ -103,6 +129,7 @@ export default function Dashboard({
 
   const handleUninstallPlugin = async () => {
     if (extendedAccount) {
+      localStorage.removeItem("savingsAddress");
       setSPState((prev) => ({ ...prev, uninstalling: true }));
       uninstallSavingsPlugin(extendedAccount)
         .then(() => {
@@ -111,6 +138,7 @@ export default function Dashboard({
             uninstalling: false,
             installed: false,
           }));
+          setAutomationState((prev) => ({ ...prev, created: false }));
         })
         .catch(() => {
           setSPState((prev) => ({ ...prev, uninstalling: false }));
@@ -141,20 +169,44 @@ export default function Dashboard({
   useEffect(() => {
     if (msca) {
       (async () => {
-        const balance = await getEthBalance(msca);
+        const balancePromise = getEthBalance(msca);
+        const tokenBalancePromise = getTokenBalance(msca, USDC);
+        const [balance, tokenBalance] = await Promise.all([
+          balancePromise,
+          tokenBalancePromise,
+        ]);
         setMscaBalance(balance);
+        setMscaTokenBalance(String(tokenBalance));
       })();
     }
-  }, [msca]);
+  }, [msca, automationState.created]);
 
   useEffect(() => {
     if (walletAddress) {
       (async () => {
-        const balance = await getEthBalance(walletAddress);
+        const balancePromise = getEthBalance(walletAddress);
+        const tokenBalancePromise = getTokenBalance(walletAddress, USDC);
+        const [balance, tokenBalance] = await Promise.all([
+          balancePromise,
+          tokenBalancePromise,
+        ]);
         setWalletBalance(balance);
+        setWalletTokenBalance(String(tokenBalance));
       })();
     }
   }, []);
+
+  useEffect(() => {
+    if (savingsAddress) {
+      (async () => {
+        const tokenBalance = await getTokenBalance(
+          savingsAddress as Address,
+          USDC
+        );
+        setSavingsTokenBalance(String(tokenBalance));
+      })();
+    }
+  }, [savingsAddress]);
 
   return (
     <div className="bg-[#272727] h-screen flex flex-col items-center justify-center">
@@ -165,15 +217,15 @@ export default function Dashboard({
             className="w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
             onClick={handleInstallPlugin}
           >
-            {SPState.installing ? "Installing Plugin ..." : "Install Plugin"}
+            {SPState.installing ? "Installing Plugin..." : "Install Plugin"}
           </button>
           {/* Create Automation */}
           <button
             className="mt-4 w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
             onClick={handleCreateAutomation}
           >
-            {creatingAutomation
-              ? "Creating Automation ..."
+            {automationState.creating
+              ? "Creating Automation..."
               : "Create Automation"}
           </button>
           {/* Send UserOp */}
@@ -189,11 +241,22 @@ export default function Dashboard({
               }
             />
           </div>
+          <div className="mt-5 mb-1">
+            <p className="text-sm text-[#646464]">Enter Amount (in decimals)</p>
+            <input
+              className="w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white"
+              type="number"
+              value={Number(sendTokenAmount)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSendTokenAmount(BigInt(e.target.value))
+              }
+            />
+          </div>
           <button
             className="mt-4 w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
             onClick={sendTokenUO}
           >
-            {sendingToken ? "Sending Token ..." : "Send Token"}
+            {sendingToken ? "Sending Token..." : "Send Token"}
           </button>
           {/* Uninstall Plugin */}
           <button
@@ -201,28 +264,37 @@ export default function Dashboard({
             onClick={handleUninstallPlugin}
           >
             {SPState.uninstalling
-              ? "Uninstalling Plugin ..."
+              ? "Uninstalling Plugin..."
               : "Uninstall Plugin"}
           </button>
         </div>
 
         <div>
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex flex-col md:flex-row gap-3">
+            <div className="absolute top-[-32px] right-[8px] flex items-center gap-2">
+              <p>{viemChain.name}</p>
+              <button onClick={() => setModalOpen(true)}>
+                <img className="ml-auto" src="/chain-selector.svg" />
+              </button>
+            </div>
             {/* Top Card 1 */}
-            <div className="px-5 py-6 bg-[#1E1E1E] w-[330px] h-[235px] rounded-[16px]">
+            <div className="px-5 py-6 bg-[#1E1E1E] w-[330px] h-[335px] rounded-[16px]">
               <div className="grid grid-cols-2">
                 <p className="text-sm text-[#646464] text-left">
                   Connected Wallet
                 </p>
-                <button onClick={() => setModalOpen(true)}>
-                  <img className="ml-auto" src="/chain-selector.svg" />
-                </button>
               </div>
               {/* <div className="mt-5 grid grid-cols-2"> */}
               <div className="mt-5">
-                <p className="text-[#646464] text-lg">Total Balance</p>
+                <p className="text-[#646464] text-lg">Balance</p>
                 <p className="text-white text-[32px] font-bold">
                   {walletBalance.slice(0, 6)} ETH
+                </p>
+              </div>
+              <div className="mt-5">
+                <p className="text-[#646464] text-lg">Token Balance</p>
+                <p className="text-white text-[32px] font-bold">
+                  {String(Number(walletTokenBalance) / 1e6)} USDC
                 </p>
               </div>
               {/* <img className="ml-auto" src="/fund.svg" /> */}
@@ -249,7 +321,7 @@ export default function Dashboard({
               </div>
             </div>
             {/* Top Card 2 */}
-            <div className="px-5 py-6 bg-[#1E1E1E] w-[330px] h-[235px] rounded-[16px]">
+            <div className="px-5 py-6 bg-[#1E1E1E] w-[330px] h-[335px] rounded-[16px]">
               <div className="grid grid-cols-2">
                 <p className="text-sm text-[#646464] text-left">
                   Checking Account
@@ -259,6 +331,12 @@ export default function Dashboard({
                 <p className="text-[#646464] text-lg">Balance</p>
                 <p className="text-white text-[32px] font-bold">
                   {mscaBalance.slice(0, 6)} ETH
+                </p>
+              </div>
+              <div className="mt-5">
+                <p className="text-[#646464] text-lg">Token Balance</p>
+                <p className="text-white text-[32px] font-bold">
+                  {String(Number(mscaTokenBalance) / 1e6)} USDC
                 </p>
               </div>
               <p className="mt-2 mx-[5px] text-sm text-[#646464]">
@@ -281,12 +359,22 @@ export default function Dashboard({
               </div>
             </div>
             {/* Top Card 3 - Savings Account */}
-            <div className="px-5 py-6 bg-[#1E1E1E] w-[330px] h-[235px] rounded-[16px]">
+            <div className="px-5 py-6 bg-[#1E1E1E] w-[330px] h-[335px] rounded-[16px]">
               <p className="text-sm text-[#646464]">Savings Account</p>
               {SPState.installed ? (
-                <div className="my-[34px]">
-                  <p className="text-sm text-[#646464]">
-                    Enter Savings Address
+                <div className="mt-[24px] mb-[24px]">
+                  {automationState.created && (
+                    <div className="mt-4">
+                      <p className="text-[#646464] text-lg">Token Balance</p>
+                      <p className="text-white text-[32px] font-bold">
+                        {String(Number(savingsTokenBalance) / 1e6)} USDC
+                      </p>
+                    </div>
+                  )}
+                  <p className="mt-6 text-sm text-[#646464]">
+                    {automationState.created
+                      ? "Savings Address"
+                      : "Enter Savings Address"}
                   </p>
                   <input
                     className="w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white"
@@ -296,31 +384,48 @@ export default function Dashboard({
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setSavingsAddress(e.target.value as Address)
                     }
+                    readOnly={automationState.created}
+                  />
+                  <p className="mt-2 text-sm text-[#646464]">
+                    {automationState.created
+                      ? "Roundup Amount"
+                      : "Enter Roundup Amount"}
+                  </p>
+                  <input
+                    className="w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white"
+                    type="number"
+                    value={roundUpAmount}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setRoundUpAmount(Number(e.target.value))
+                    }
+                    readOnly={automationState.created}
                   />
                 </div>
               ) : (
-                <div className="my-[43px] flex flex-col items-center justify-center">
+                <div className="my-[90px] flex flex-col items-center justify-center">
                   <p className="w-[180px] text-white text-sm text-center">
                     Install Locker Plugin for saving your funds.
                   </p>
                 </div>
               )}
-              <button
-                className="w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
-                onClick={
-                  SPState.installed
-                    ? handleCreateAutomation
-                    : handleInstallPlugin
-                }
-              >
-                {SPState.installed
-                  ? creatingAutomation
-                    ? "Creating Automation..."
-                    : "Create Automation"
-                  : SPState.installing
-                  ? "Installing Plugin..."
-                  : "Install Plugin"}
-              </button>
+              {!automationState.created && (
+                <button
+                  className="w-full min-w-[230px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold"
+                  onClick={
+                    SPState.installed
+                      ? handleCreateAutomation
+                      : handleInstallPlugin
+                  }
+                >
+                  {SPState.installed
+                    ? automationState.creating
+                      ? "Creating Automation..."
+                      : "Create Automation"
+                    : SPState.installing
+                    ? "Installing Plugin..."
+                    : "Install Plugin"}
+                </button>
+              )}
             </div>
           </div>
           {/* Transaction History */}
