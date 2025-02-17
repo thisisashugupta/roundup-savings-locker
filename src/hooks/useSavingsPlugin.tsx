@@ -7,8 +7,10 @@ import { toast } from "sonner";
 import { Address } from "viem";
 import { viemChain } from "@/config/chains";
 import { publicClient } from "../clients/publicViemClient";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const useSavingsPlugin = () => {
+  const { setInLocalStorage, removeFromLocalStorage } = useLocalStorage();
   const savingsPluginAddress = SavingsPlugin.meta.addresses[viemChain.id];
 
   const getSavingsAutomations = async (
@@ -63,8 +65,8 @@ const useSavingsPlugin = () => {
 
     try {
       const res = await extendedAccount.createAutomation({ args });
-      localStorage.setItem("automationCreated", "true");
-      localStorage.setItem("savingsAddress", args[1] as string);
+      setInLocalStorage("automationCreated", "true");
+      setInLocalStorage("savingsAddress", args[1] as string);
       console.log("Automation created with userop hash:", res.hash);
       toast.success(`Automation created`);
     } catch (e) {
@@ -96,7 +98,7 @@ const useSavingsPlugin = () => {
       });
       console.log("Plugin Uninstalled with userop hash:", result.hash);
       toast.success(`Plugin Uninstalled. Hash: ${result.hash}`);
-      localStorage.removeItem("automationCreated");
+      removeFromLocalStorage("automationCreated");
     } catch (e) {
       toast.error("Plugin Uninstallation Failed (check console)");
       console.error("Plugin Uninstallation Failed", e);

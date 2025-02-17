@@ -8,6 +8,7 @@ import useSavingsPlugin from "@/hooks/useSavingsPlugin";
 import useViem from "@/hooks/useViem";
 import { USDC } from "@/config/tokens";
 import { viemChain } from "@/config/chains";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 type TSPState = {
   installing: boolean;
@@ -27,7 +28,7 @@ type TAutomationState = {
 };
 const defaultAutomationState: TAutomationState = {
   creating: false,
-  created: Boolean(localStorage.getItem("automationCreated")),
+  created: false,
 };
 
 export default function Dashboard({
@@ -37,6 +38,7 @@ export default function Dashboard({
   walletAddress: Address;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
 }) {
+  const { removeFromLocalStorage, getFromLocalStorage } = useLocalStorage();
   // State
   const [walletBalance, setWalletBalance] = useState<string>("0");
   const [walletTokenBalance, setWalletTokenBalance] = useState<string>("0");
@@ -45,7 +47,7 @@ export default function Dashboard({
   const [mscaTokenBalance, setMscaTokenBalance] = useState<string>("0");
   const [extendedAccount, setExtendedAccount] = useState<any>();
   const [savingsAddress, setSavingsAddress] = useState<Address | string>(
-    localStorage.getItem("savingsAddress") ?? ""
+    getFromLocalStorage("savingsAddress") ?? ""
   );
   const [savingsTokenBalance, setSavingsTokenBalance] = useState<string>("0");
   const [roundUpAmount, setRoundUpAmount] = useState<number>(1000000);
@@ -55,9 +57,10 @@ export default function Dashboard({
   const [sendTokenAmount, setSendTokenAmount] = useState<bigint>(
     BigInt(1500000)
   );
-  const [automationState, setAutomationState] = useState<TAutomationState>(
-    defaultAutomationState
-  );
+  const [automationState, setAutomationState] = useState<TAutomationState>({
+    ...defaultAutomationState,
+    created: Boolean(getFromLocalStorage("automationCreated")),
+  });
 
   // Hooks
   const { getModularAccountAlchemyClient, sendToken } = useSignWithAlchemy();
@@ -129,7 +132,7 @@ export default function Dashboard({
 
   const handleUninstallPlugin = async () => {
     if (extendedAccount) {
-      localStorage.removeItem("savingsAddress");
+      removeFromLocalStorage("savingsAddress");
       setSPState((prev) => ({ ...prev, uninstalling: true }));
       uninstallSavingsPlugin(extendedAccount)
         .then(() => {
