@@ -10,4 +10,9 @@ import {
 const viemChain = viemSepolia;
 const aaChain = aaSepolia;
 
-export { viemChain, aaChain };
+const sepoliaBlockExplorer = "https://sepolia.etherscan.io";
+const baseSepoliaBlockExplorer = "https://sepolia.basescan.org";
+
+const blockExplorer = sepoliaBlockExplorer;
+
+export { viemChain, aaChain, blockExplorer };

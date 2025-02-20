@@ -19,8 +19,12 @@ import { encodeAbiParameters } from "viem";
 import { alchemy } from "@account-kit/infra";
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
 import { USDC } from "@/config/tokens";
+import useTransactionApis from "./useTransactionApis";
 
 const useSignWithAlchemy = () => {
+  const { getTransactionReceipt, getUserOperationByHash } =
+    useTransactionApis();
+
   // Custom Sign Message function (from Capsule docs) to sign messages with Capsule
   async function customSignMessage(message: SignableMessage): Promise<Hash> {
     const hashedMessage = hashMessage(message);
@@ -109,7 +113,46 @@ const useSignWithAlchemy = () => {
 
       console.log("User Operation Hash:", res.hash);
       toast.success("UserOp sent");
-      return res.hash;
+
+      let txHash;
+
+      while (!txHash) {
+        txHash = await getUserOperationByHash(res.hash);
+        if (txHash) {
+          console.log("txHash:", txHash);
+          break;
+        }
+        console.log("Waiting for txHash...");
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
+      }
+
+      let txReceipt;
+
+      while (!txReceipt) {
+        txReceipt = await getTransactionReceipt(txHash);
+        if (txReceipt) {
+          console.log("Receipt:", txReceipt);
+          break;
+        }
+        console.log("Waiting for txReceipt...");
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      }
+
+      const response = txReceipt.logs
+        .filter(
+          (log: { address: string }) =>
+            log.address.toLowerCase() === USDC.toLowerCase()
+        )
+        .map((log: any) => ({
+          from: `0x${log.topics[1].slice(26)}`,
+          to: `0x${log.topics[2].slice(26)}`,
+          amount: BigInt(log.data),
+          hash: txHash,
+        }));
+
+      console.log("Response:", response);
+
+      return response;
     } catch (e) {
       console.error("Sending UserOp Failed", e);
       toast.error("Sending UserOp Failed (check console)");

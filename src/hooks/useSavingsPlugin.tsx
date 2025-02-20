@@ -1,3 +1,5 @@
+"use client";
+
 import {
   savingsPluginActions,
   SavingsPlugin,
@@ -8,8 +10,11 @@ import { Address } from "viem";
 import { viemChain } from "@/config/chains";
 import { publicClient } from "../clients/publicViemClient";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import useTransactionApis from "./useTransactionApis";
 
 const useSavingsPlugin = () => {
+  const { getTransactionReceipt, getUserOperationByHash } =
+    useTransactionApis();
   const { setInLocalStorage, removeFromLocalStorage } = useLocalStorage();
   const savingsPluginAddress = SavingsPlugin.meta.addresses[viemChain.id];
 
@@ -65,10 +70,35 @@ const useSavingsPlugin = () => {
 
     try {
       const res = await extendedAccount.createAutomation({ args });
-      setInLocalStorage("automationCreated", "true");
+      setInLocalStorage("automationCreated", Boolean(true).toString());
       setInLocalStorage("savingsAddress", args[1] as string);
       console.log("Automation created with userop hash:", res.hash);
-      toast.success(`Automation created`);
+      toast.success(`Automation Creation initiated. UserOp Sent`);
+
+      let txHash;
+
+      while (!txHash) {
+        txHash = await getUserOperationByHash(res.hash);
+        if (txHash) {
+          console.log("txHash:", txHash);
+          break;
+        }
+        console.log("Waiting for txHash...");
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
+      }
+      toast.success(`Tx mined.`);
+
+      let txReceipt;
+
+      while (!txReceipt) {
+        txReceipt = await getTransactionReceipt(txHash);
+        if (txReceipt) {
+          console.log("Receipt:", txReceipt);
+          break;
+        }
+        console.log("Waiting for txReceipt...");
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      }
     } catch (e) {
       console.error("Plugin Installation Failed", e);
       toast.error("Plugin Installation Failed (check console)");
@@ -83,7 +113,32 @@ const useSavingsPlugin = () => {
         args: [],
       });
       console.log("Plugin Installed with userop hash:", result.hash);
-      toast.success(`Plugin Installed`);
+      toast.success(`Plugin Installation initiated. UserOp Sent`);
+
+      let txHash;
+
+      while (!txHash) {
+        txHash = await getUserOperationByHash(result.hash);
+        if (txHash) {
+          console.log("txHash:", txHash);
+          break;
+        }
+        console.log("Waiting for txHash...");
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
+      }
+      toast.success(`Tx mined.`);
+
+      let txReceipt;
+
+      while (!txReceipt) {
+        txReceipt = await getTransactionReceipt(txHash);
+        if (txReceipt) {
+          console.log("Receipt:", txReceipt);
+          break;
+        }
+        console.log("Waiting for txReceipt...");
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      }
     } catch (e) {
       toast.error("Plugin Installation Failed (check console)");
       console.error("Plugin Installation Failed", e);
@@ -97,8 +152,33 @@ const useSavingsPlugin = () => {
         pluginAddress: savingsPluginAddress as `0x${string}`,
       });
       console.log("Plugin Uninstalled with userop hash:", result.hash);
-      toast.success(`Plugin Uninstalled. Hash: ${result.hash}`);
+      toast.success(`Plugin Uninstallation initiated. UserOp Sent`);
       removeFromLocalStorage("automationCreated");
+
+      let txHash;
+
+      while (!txHash) {
+        txHash = await getUserOperationByHash(result.hash);
+        if (txHash) {
+          console.log("txHash:", txHash);
+          break;
+        }
+        console.log("Waiting for txHash...");
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
+      }
+      toast.success(`Tx mined.`);
+
+      let txReceipt;
+
+      while (!txReceipt) {
+        txReceipt = await getTransactionReceipt(txHash);
+        if (txReceipt) {
+          console.log("Receipt:", txReceipt);
+          break;
+        }
+        console.log("Waiting for txReceipt...");
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      }
     } catch (e) {
       toast.error("Plugin Uninstallation Failed (check console)");
       console.error("Plugin Uninstallation Failed", e);

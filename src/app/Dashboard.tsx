@@ -7,8 +7,10 @@ import useSignWithAlchemy from "@/hooks/useSignWithAlchemy";
 import useSavingsPlugin from "@/hooks/useSavingsPlugin";
 import useViem from "@/hooks/useViem";
 import { USDC } from "@/config/tokens";
-import { viemChain } from "@/config/chains";
+import { viemChain, blockExplorer } from "@/config/chains";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import Link from "next/link";
+import { minifyAddress } from "@/utils/address";
 
 type TSPState = {
   installing: boolean;
@@ -61,6 +63,9 @@ export default function Dashboard({
     ...defaultAutomationState,
     created: Boolean(getFromLocalStorage("automationCreated")),
   });
+  const [txHistory, setTxHistory] = useState<
+    { amount: bigint; from: string; to: string; hash: string }[]
+  >([]);
 
   // Hooks
   const { getModularAccountAlchemyClient, sendToken } = useSignWithAlchemy();
@@ -82,9 +87,11 @@ export default function Dashboard({
     }
 
     setSendingToken(true);
-    sendToken(extendedAccount, recipient as Address, sendTokenAmount).finally(
-      () => setSendingToken(false)
-    );
+    sendToken(extendedAccount, recipient as Address, sendTokenAmount)
+      .then((txHistoryData) => {
+        setTxHistory((prev) => [...txHistoryData, ...prev]);
+      })
+      .finally(() => setSendingToken(false));
   };
 
   const handleCreateAutomation = async () => {
@@ -182,7 +189,7 @@ export default function Dashboard({
         setMscaTokenBalance(String(tokenBalance));
       })();
     }
-  }, [msca, automationState.created]);
+  }, [msca, automationState.created, txHistory]);
 
   useEffect(() => {
     if (walletAddress) {
@@ -209,7 +216,7 @@ export default function Dashboard({
         setSavingsTokenBalance(String(tokenBalance));
       })();
     }
-  }, [savingsAddress]);
+  }, [savingsAddress, txHistory]);
 
   return (
     <div className="bg-[#272727] h-screen flex flex-col items-center justify-center">
@@ -436,6 +443,38 @@ export default function Dashboard({
             <p className="text-lg text-[#646464] text-left">
               Transaction History
             </p>
+            <div className="mt-5">
+              {txHistory.map((tx, index) => (
+                <Link
+                  href={`${blockExplorer}/tx/${tx.hash}`}
+                  target="_blank"
+                  key={`txHistory-${index}`}
+                >
+                  <div className="flex items-center justify-between border border-[#272727] rounded-md px-5 py-3 mb-2">
+                    <div>
+                      <p className="text-white text-sm">
+                        From:{" "}
+                        <span className="font-semibold text-base mr-4">
+                          {minifyAddress(tx.from)}
+                        </span>
+                        To:{" "}
+                        <span className="font-semibold text-base mr-1">
+                          {minifyAddress(tx.to)}
+                        </span>
+                      </p>
+                      <p className="text-white text-sm"></p>
+                    </div>
+
+                    <p className="text-white text-sm">
+                      Amount:{" "}
+                      <span className="font-semibold text-base mr-1">
+                        {String(Number(tx.amount) / 1e6)} USDC
+                      </span>
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
