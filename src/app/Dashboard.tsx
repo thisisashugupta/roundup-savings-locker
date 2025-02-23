@@ -6,8 +6,7 @@ import { useState, useEffect } from "react";
 import useSignWithAlchemy from "@/hooks/useSignWithAlchemy";
 import useSavingsPlugin from "@/hooks/useSavingsPlugin";
 import useViem from "@/hooks/useViem";
-import { USDC } from "@/config/tokens";
-import { viemChain, blockExplorer } from "@/config/chains";
+import { USDC, viemChain, blockExplorer } from "@/config";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import Link from "next/link";
 import { minifyAddress } from "@/utils/address";
@@ -104,8 +103,7 @@ export default function Dashboard({
       return;
     }
 
-    const args: [bigint, Address, bigint] = [
-      BigInt(0),
+    const args: [Address, bigint] = [
       savingsAddress as Address,
       BigInt(1000000),
     ];
@@ -171,7 +169,7 @@ export default function Dashboard({
 
   useEffect(() => {
     if (msca) {
-      getSavingsAutomations(msca, BigInt(0));
+      getSavingsAutomations(msca);
     }
   }, [msca]);
 

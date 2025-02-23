@@ -18,16 +18,13 @@ const useSavingsPlugin = () => {
   const { setInLocalStorage, removeFromLocalStorage } = useLocalStorage();
   const savingsPluginAddress = SavingsPlugin.meta.addresses[viemChain.id];
 
-  const getSavingsAutomations = async (
-    userAddress: Address,
-    automationIndex: bigint
-  ) => {
+  const getSavingsAutomations = async (userAddress: Address) => {
     try {
       const result = await publicClient.readContract({
         address: savingsPluginAddress,
         abi: SavingsPluginAbi,
         functionName: "savingsAutomations",
-        args: [userAddress, automationIndex],
+        args: [userAddress],
       });
       console.log("Savings Automations:", result);
       return result;
@@ -56,22 +53,15 @@ const useSavingsPlugin = () => {
 
   const createAutomation = async (
     extendedAccount: any,
-    args: [bigint, Address, bigint]
+    args: [Address, bigint]
   ) => {
     console.log("Creating Automation");
-    console.log("savingsAddress:", args[1]);
-    /**
-    const sampleArgs = [
-      BigInt(0), // automationIndex
-      "0xFa00D29d378EDC57AA1006946F0fc6230a5E3288", // savingsAddress
-      BigInt(1000000), // roundUpAmount
-    ]; 
-     */
+    console.log("savingsAddress:", args[0]);
 
     try {
       const res = await extendedAccount.createAutomation({ args });
       setInLocalStorage("automationCreated", Boolean(true).toString());
-      setInLocalStorage("savingsAddress", args[1] as string);
+      setInLocalStorage("savingsAddress", args[0] as string);
       console.log("Automation created with userop hash:", res.hash);
       toast.success(`Automation Creation initiated. UserOp Sent`);
 

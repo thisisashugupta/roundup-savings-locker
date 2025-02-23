@@ -18,7 +18,7 @@ import capsuleClient from "../clients/capsule/capsule";
 import { encodeAbiParameters } from "viem";
 import { alchemy } from "@account-kit/infra";
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
-import { USDC } from "@/config/tokens";
+import { USDC, alchemyRpcUrl } from "@/config";
 import useTransactionApis from "./useTransactionApis";
 
 const useSignWithAlchemy = () => {
@@ -53,7 +53,7 @@ const useSignWithAlchemy = () => {
     const viemClient: WalletClient = createCapsuleViemClient(capsuleClient, {
       account: viemCapsuleAccount,
       chain: viemChain,
-      transport: http(process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_RPC_URL),
+      transport: http(alchemyRpcUrl),
     });
 
     /** Configure Viem Client with Custom Sign Message **/
