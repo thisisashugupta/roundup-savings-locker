@@ -7,12 +7,7 @@ import {
   sepolia as aaSepolia,
 } from "@account-kit/infra";
 
-const viemChain = viemSepolia;
-const aaChain = aaSepolia;
+const viemChain = viemBaseSepolia;
+const aaChain = aaBaseSepolia;
 
-const sepoliaBlockExplorer = "https://sepolia.etherscan.io";
-const baseSepoliaBlockExplorer = "https://sepolia.basescan.org";
-
-const blockExplorer = sepoliaBlockExplorer;
-
-export { viemChain, aaChain, blockExplorer };
+export { viemChain, aaChain };

@@ -1,7 +1,7 @@
+import { alchemyRpcUrl } from "@/config";
+
 const useTransactionApis = () => {
   const getUserOperationByHash = async (userOpHash: string) => {
-    const url = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_RPC_URL!;
-
     const headers = {
       accept: "application/json",
       "content-type": "application/json",
@@ -15,7 +15,7 @@ const useTransactionApis = () => {
     });
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(alchemyRpcUrl, {
         method: "POST",
         headers: headers,
         body: body,
@@ -28,8 +28,6 @@ const useTransactionApis = () => {
   };
 
   async function getTransactionReceipt(txHash: string) {
-    const url = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_RPC_URL!;
-
     const headers = {
       accept: "application/json",
       "content-type": "application/json",
@@ -43,7 +41,7 @@ const useTransactionApis = () => {
     });
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(alchemyRpcUrl, {
         method: "POST",
         headers: headers,
         body: body,
