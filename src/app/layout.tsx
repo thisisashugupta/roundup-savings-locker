@@ -3,8 +3,8 @@ import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Psifi x Locker",
-  description: "Psifi x Locker",
+  title: "RoundUp Savings | Locker",
+  description: "RoundUp Savings - Locker",
 };
 
 export default function RootLayout({

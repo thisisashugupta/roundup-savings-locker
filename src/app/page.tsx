@@ -14,7 +14,11 @@ export default function Page() {
     <>
       <div className="bg-[#272727] h-screen flex flex-col items-center justify-center">
         {userState.loading ? (
-          <>Loading...</>
+          <div className="w-full h-full flex items-center justify-center">
+            <video className="w-24 h-24" autoPlay loop muted playsInline>
+              <source src="/loader.webm" type="video/webm" />
+            </video>
+          </div>
         ) : (
           <>
             {userState?.walletAddress ? (
