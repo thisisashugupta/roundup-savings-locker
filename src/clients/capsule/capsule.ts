@@ -1,4 +1,4 @@
-import Capsule, { Environment } from "@usecapsule/react-sdk";
+import Capsule, { Environment } from '@usecapsule/react-sdk';
 
 const env = Environment.BETA;
 const apiKey = process.env.NEXT_PUBLIC_CAPSULE_API_KEY;

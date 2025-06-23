@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-const isServer = typeof window === "undefined" ? false : true;
+const isServer = typeof window === 'undefined' ? false : true;
 
 export function useLocalStorage() {
   function setInLocalStorage(key: string, value: string) {
@@ -9,7 +9,7 @@ export function useLocalStorage() {
   }
 
   function getFromLocalStorage(key: string) {
-    if (isServer) return "";
+    if (isServer) return '';
     return localStorage.getItem(key);
   }
 

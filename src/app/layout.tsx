@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import "@/styles/globals.css";
-import { Toaster } from "sonner";
+import type { Metadata } from 'next';
+import '@/styles/globals.css';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: "RoundUp Savings | Locker",
-  description: "RoundUp Savings - Locker",
+  title: 'RoundUp Savings | Locker',
+  description: 'RoundUp Savings - Locker',
 };
 
 export default function RootLayout({
@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`antialiased`}>
+    <html lang='en'>
+      <body className={`antialiased bg-[#272727]`}>
         {children}
         <Toaster />
       </body>
