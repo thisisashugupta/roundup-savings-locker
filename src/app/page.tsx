@@ -5,7 +5,7 @@ import { CapsuleModal } from '@usecapsule/react-sdk';
 import useAuth from '@/hooks/useAuth';
 import DashboardPage from './Dashboard';
 import SignInPage from './SignIn';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 
 export default function Page() {
   const { capsuleClient, isModalOpen, setModalOpen, userState } = useAuth();
@@ -19,7 +19,7 @@ export default function Page() {
       ) : userState?.walletAddress ? (
         <DashboardPage walletAddress={userState.walletAddress as Address} setModalOpen={setModalOpen} />
       ) : (
-        <SignInPage setModalOpen={setModalOpen} userState={userState} />
+        <SignInPage setModalOpen={setModalOpen} />
       )}
 
       <CapsuleModal

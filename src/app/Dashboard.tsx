@@ -2,14 +2,14 @@
 
 import type { Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 import { useState, useEffect } from 'react';
 import useSignWithAlchemy from '@/hooks/useSignWithAlchemy';
 import useSavingsPlugin from '@/hooks/useSavingsPlugin';
 import useViem from '@/hooks/useViem';
 import { USDC, viemChain } from '@/config';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { TPluginState, TAutomationState, TTxHistoryItem, TModularSmartAccountState } from '@/types';
+import type { TPluginState, TAutomationState, TTxHistoryItem, TModularSmartAccountState } from '@/types';
 import ActionCenter from '@/components/feature/ActionCenter';
 import ConnectedAccount from '@/components/feature/ConnectedAccount';
 import SmartAccount from '@/components/feature/SmartAccount';
@@ -211,8 +211,8 @@ export default function Dashboard({
       {/* Chain */}
       <div className='mb-2 flex items-center justify-end gap-2'>
         <p>{viemChain.name}</p>
-        <button onClick={() => setModalOpen(true)}>
-          <img className='ml-auto' src='/chain-selector.svg' />
+        <button type='button' onClick={() => setModalOpen(true)}>
+          <img className='ml-auto' src='/chain-selector.svg' alt='wallet' aria-label={'wallet'} />
         </button>
       </div>
 

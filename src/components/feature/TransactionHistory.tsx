@@ -16,7 +16,6 @@ export default function TransactionHistory({ txHistory }: { txHistory: TTxHistor
                   From: <span className='font-semibold text-base mr-4'>{minifyAddress(tx.from)}</span>
                   To: <span className='font-semibold text-base mr-1'>{minifyAddress(tx.to)}</span>
                 </p>
-                <p className='text-white text-sm'></p>
               </div>
 
               <p className='text-white text-sm'>
