@@ -1,12 +1,23 @@
 {
-  "name": "psifi-locker",
+  "name": "roundup-savings-locker",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint:eslint": "next lint",
+    "check": "biome check .",
+    "check:write": "biome check --write .",
+    "clean": "rm -rf node_modules",
+    "format": "biome format --write .",
+    "format:changed": "biome format --changed --write",
+    "format:check": "biome format .",
+    "format:commit": "biome format --since=HEAD~1 --write",
+    "format:staged": "biome format --staged --write",
+    "lint": "biome lint --write .",
+    "lint:check": "biome lint .",
+    "lint:error": "biome lint . --diagnostic-level=error"
   },
   "dependencies": {
     "@account-kit/smart-contracts": "^4.8.0",
@@ -16,6 +27,7 @@
     "@usecapsule/server-sdk": "2.20.0",
     "@usecapsule/viem-v2-integration": "2.7.0",
     "@usecapsule/web-sdk": "2.7.0",
+    "lucide-react": "^0.522.0",
     "next": "14.2.14",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -23,6 +35,7 @@
     "viem": "^2.22.17"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.0.5",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^18",

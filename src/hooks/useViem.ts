@@ -1,15 +1,15 @@
-import { publicClient } from "@/clients/publicViemClient";
-import { formatEther, type Address } from "viem";
+import { publicClient } from '@/clients/publicViemClient';
+import { formatEther, type Address } from 'viem';
 
 const erc20Abi = [
   {
     constant: true,
-    inputs: [{ name: "_owner", type: "address" }],
-    name: "balanceOf",
-    outputs: [{ name: "balance", type: "uint256" }],
+    inputs: [{ name: '_owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: 'balance', type: 'uint256' }],
     payable: false,
-    stateMutability: "view",
-    type: "function",
+    stateMutability: 'view',
+    type: 'function',
   },
 ];
 
@@ -23,7 +23,7 @@ export default function useViem() {
     const balance = await publicClient.readContract({
       address: token,
       abi: erc20Abi,
-      functionName: "balanceOf",
+      functionName: 'balanceOf',
       args: [address],
     });
     console.log(balance);

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "includes": [
+      "**/*.{ts,tsx,js,jsx,json}",
+      "!.idea/**",
+      "!.vscode/**",
+      "!.git/**",
+      "!**/node_modules/**",
+      "!apps/**/.next/**",
+      "!packages/contracts/lib/**"
+    ],
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "formatWithErrors": false,
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true,
+    "includes": [
+      "**/*.{ts,tsx,js,jsx,json}",
+      "!/.idea/**",
+      "!/.vscode/**",
+      "!/.git/**",
+      "!**/node_modules/**",
+      "!/apps/**/.next/**"
+    ],
+    "rules": {
+      "recommended": true,
+      "style": {
+        "useImportType": "warn",
+        "useTemplate": "warn",
+        "noUnusedTemplateLiteral": "warn",
+        "useNumberNamespace": "warn",
+        "noUselessElse": "warn",
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noInferrableTypes": "error"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "warn",
+        "noUnusedVariables": "error"
+      },
+      "suspicious": {
+        "noImplicitAnyLet": "warn"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "single",
+      "lineEnding": "lf",
+      "trailingCommas": "all"
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    },
+    "formatter": {
+      "expand": "always",
+      "lineWidth": 120,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineEnding": "lf",
+      "trailingCommas": "none"
+    }
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  }
+}

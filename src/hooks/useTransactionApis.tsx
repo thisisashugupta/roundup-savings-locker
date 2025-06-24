@@ -1,22 +1,22 @@
-import { alchemyRpcUrl } from "@/config";
+import { alchemyRpcUrl } from '@/config';
 
 const useTransactionApis = () => {
   const getUserOperationByHash = async (userOpHash: string) => {
     const headers = {
-      accept: "application/json",
-      "content-type": "application/json",
+      accept: 'application/json',
+      'content-type': 'application/json',
     };
 
     const body = JSON.stringify({
       id: 1,
-      jsonrpc: "2.0",
-      method: "eth_getUserOperationByHash",
+      jsonrpc: '2.0',
+      method: 'eth_getUserOperationByHash',
       params: [userOpHash],
     });
 
     try {
       const response = await fetch(alchemyRpcUrl, {
-        method: "POST",
+        method: 'POST',
         headers: headers,
         body: body,
       });
@@ -29,20 +29,20 @@ const useTransactionApis = () => {
 
   async function getTransactionReceipt(txHash: string) {
     const headers = {
-      accept: "application/json",
-      "content-type": "application/json",
+      accept: 'application/json',
+      'content-type': 'application/json',
     };
 
     const body = JSON.stringify({
       id: 1,
-      jsonrpc: "2.0",
-      method: "eth_getTransactionReceipt",
+      jsonrpc: '2.0',
+      method: 'eth_getTransactionReceipt',
       params: [txHash],
     });
 
     try {
       const response = await fetch(alchemyRpcUrl, {
-        method: "POST",
+        method: 'POST',
         headers: headers,
         body: body,
       });
@@ -50,7 +50,7 @@ const useTransactionApis = () => {
       const data = await response.json();
       return data.result;
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
     }
   }
 
