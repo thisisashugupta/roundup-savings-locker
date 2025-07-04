@@ -24,7 +24,7 @@ export default function SavingsAccount({
   handleInstallPlugin: () => void;
 }) {
   return (
-    <div className='w-full h-full px-5 py-6 bg-[#1E1E1E] min-h-[335px] rounded-[16px] flex flex-col justify-between'>
+    <div className='w-full h-full px-5 py-6 min-h-[335px] rounded-[16px] flex flex-col justify-between border border-gray-300 text-black bg-[#dbe3ce]'>
       <div>
         <p className='text-sm text-[#646464]'>Savings Account</p>
         {moduleState.installed ? (
@@ -32,14 +32,14 @@ export default function SavingsAccount({
             {automationState.created && (
               <div className='mt-4'>
                 <p className='text-[#646464] text-lg'>Token Balance</p>
-                <p className='text-white text-[32px] font-bold'>{String(Number(savingsTokenBalance) / 1e6)} USDC</p>
+                <p className='text-[32px] font-bold'>{String(Number(savingsTokenBalance) / 1e6)} USDC</p>
               </div>
             )}
             <p className='mt-6 text-sm text-[#646464]'>
               {automationState.created ? 'Savings Address' : 'Enter Savings Address'}
             </p>
             <input
-              className='w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white'
+              className='w-full mt-1 bg-[#dbe3ce] border border-gray-400 rounded-md px-2 py-1'
               placeholder='0x...'
               type='text'
               value={savingsAddress}
@@ -50,7 +50,7 @@ export default function SavingsAccount({
               {automationState.created ? 'Roundup Amount' : 'Enter Roundup Amount'}
             </p>
             <input
-              className='w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white'
+              className='w-full mt-1 bg-[#dbe3ce] border border-gray-400 rounded-md px-2 py-1'
               type='number'
               value={roundUpAmount}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setRoundUpAmount(Number(e.target.value))}
@@ -59,14 +59,15 @@ export default function SavingsAccount({
           </div>
         ) : (
           <div className='my-[90px] flex flex-col items-center justify-center'>
-            <p className='px-4 text-white text-sm text-center'>Install Locker Savings Plugin for saving your funds.</p>
+            <p className='px-4 text-sm text-center'>Install Locker Savings Plugin for saving your funds.</p>
           </div>
         )}
       </div>
 
       {!automationState.created && (
         <button
-          className='w-full min-w-[0px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold'
+        type='button'
+          className='w-full min-w-[0px] h-[46px] bg-[#207f68] px-3 py-2 rounded-xl text-base font-bold text-[#def1ee]'
           onClick={moduleState.installed ? handleCreateAutomation : handleInstallPlugin}
         >
           {moduleState.installed

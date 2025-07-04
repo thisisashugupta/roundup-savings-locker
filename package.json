@@ -27,6 +27,7 @@
     "@usecapsule/server-sdk": "2.20.0",
     "@usecapsule/viem-v2-integration": "2.7.0",
     "@usecapsule/web-sdk": "2.7.0",
+    "geist": "^1.4.2",
     "lucide-react": "^0.522.0",
     "next": "14.2.14",
     "react": "18.2.0",

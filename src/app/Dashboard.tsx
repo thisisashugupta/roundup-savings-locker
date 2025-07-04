@@ -211,8 +211,12 @@ export default function Dashboard({
       {/* Chain */}
       <div className='mb-2 flex items-center justify-end gap-2'>
         <p>{viemChain.name}</p>
-        <button type='button' onClick={() => setModalOpen(true)}>
-          <img className='ml-auto' src='/chain-selector.svg' alt='wallet' aria-label={'wallet'} />
+        <button className='border rounded-[12px] border-gray-400' type='button' onClick={() => setModalOpen(true)}>
+          <div className='flex items-center justify-center gap-1'>
+            <img className='ml-1 w-4 h-4' src='/Base_Symbol_Blue.svg' alt='wallet' aria-label={'wallet'} />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca1b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+          
         </button>
       </div>
 

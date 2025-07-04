@@ -30,7 +30,7 @@ export default function ActionCenter({
   handleUninstallPlugin: () => void;
 }) {
   return (
-    <div className='h-full w-full p-5 bg-[#1E1E1E] rounded-[16px] flex flex-col justify-between gap-5'>
+    <div className='h-full w-full p-5 rounded-[16px] flex flex-col justify-between gap-5 border border-gray-300 text-black'>
       <div>
         <p className='text-lg text-[#646464] text-left'>Send USDC from Smart Account</p>
         {/* Send UserOp */}
@@ -38,7 +38,7 @@ export default function ActionCenter({
           <div className='mt-5 mb-1'>
             <p className='text-sm text-[#646464]'>Enter Recipient Address</p>
             <input
-              className='w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white'
+              className='w-full mt-1 border border-gray-300 rounded-md px-2 py-1'
               placeholder='0x...'
               type='text'
               value={recipient}
@@ -48,30 +48,39 @@ export default function ActionCenter({
           <div className='mt-5 mb-1'>
             <p className='text-sm text-[#646464]'>Enter Amount (in decimals)</p>
             <input
-              className='w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white'
+              className='w-full mt-1 border border-gray-300 rounded-md px-2 py-1'
               type='number'
               value={Number(sendTokenAmount)}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSendTokenAmount(BigInt(e.target.value))}
             />
           </div>
-          <button
-            className='mt-4 w-full min-w-[0px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold'
+          {moduleState.installed && <button
+          type='button'
+            className='mt-4 w-full min-w-[0px] h-[46px] bg-[#96f202] px-3 py-2 rounded-xl text-base text-black font-semibold'
             onClick={sendTokenUO}
           >
             {sendingToken ? 'Sending Token...' : 'Send Token'}
-          </button>
+          </button>}
         </div>
       </div>
 
       {/* Uninstall Plugin */}
       {moduleState.installed ? (
         <button
-          className='w-full min-w-[0px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold'
+          type='button'
+          className='w-full min-w-[0px] h-[46px] bg-[#96f202] px-3 py-2 rounded-xl text-base text-black font-semibold'
           onClick={handleUninstallPlugin}
         >
           {moduleState.uninstalling ? 'Uninstalling Plugin...' : 'Uninstall Plugin'}
         </button>
-      ) : null}
+      ) : (<button
+          type='button'
+            className='mt-4 w-full min-w-[0px] h-[46px] bg-[#96f202] px-3 py-2 rounded-xl text-base text-black font-semibold'
+            onClick={sendTokenUO}
+          >
+            {sendingToken ? 'Sending Token...' : 'Send Token'}
+          </button>)}
+      
     </div>
   );
 }
