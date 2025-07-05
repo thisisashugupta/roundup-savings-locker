@@ -18,6 +18,7 @@ import SavingsAccount from '@/components/feature/SavingsAccount';
 import TransactionHistory from '@/components/feature/TransactionHistory';
 import Image from 'next/image';
 import { getTxHistoryFromLocalStorage, serializeTxHistoryItem } from '@/utils/txHistory';
+import Link from 'next/link';
 
 const defaultPluginState: TPluginState = {
   loading: true,
@@ -227,8 +228,65 @@ export default function Dashboard({
     }
   }, [savingsAddress, txHistory]);
 
+  let step = 0;
+  let instructions: string | null = null;
+  let instructions2: string | null = null;
+
+  console.log('moduleState', moduleState)
+
+  // Check that connected account and smart account are available
+  if (!!walletAddress && !!mscaState.address && mscaState.balance !== undefined && mscaState.tokenBalance !== undefined) {
+
+    // Check if the msca wallet has native eth balance
+    if (mscaState.balance === '0') {
+      step = 1;
+      instructions = 'Your Smart Account is ready, but it has no balance. Please send some test ETH to your Modular Smart Account to get started.';
+    // Check if the msca wallet has usdc token balance
+    } else if (mscaState.tokenBalance === '0') {
+      step = 2;
+      instructions = 'You also need to add some USDC in your Smart Account.';
+    } else if (!moduleState.installed) {
+      step = 3;
+      instructions = "Awesome! Now Install Plugin to install Locker's ERC-6900 Savings Module.";
+    } else if (!automationState.created) {
+      step = 4;
+      instructions = "Now enter an address where you want to recieve all your roundup savings. Default roundup amount is 1 USDC.";
+    } else {
+      step = 5;
+      instructions = "Setup is complete! You can now send USDC tokens to any address from your smart account, and the roundup savings will be sent to your Savings Account.";
+      instructions2 = "You can click on transactions in the history to view them on the block explorer.";
+    }
+
+
+
+
+    // if (!moduleState.installed) {
+    //   step = 1;
+    //   instructions = 'To get started, please install the RoundUp Savings Plugin to your Modular Smart Account.';
+    // } else if (!automationState.created) {
+    //   step = 2;
+    //   instructions = 'Next, create a savings account to start saving your spare change.';
+    // } else if (!savingsAddress) {
+    //   step = 3;
+    //   instructions = 'You can now create a savings account and set up automation to save your spare change.';
+    // } else {
+    //   step = 4;
+    //   instructions = 'You can now send tokens, view your transaction history, and manage your savings account.';
+    // }
+  }
+
+  
+
   return (
     <div className='p-6 md:p-12'>
+
+      <div className='flex items-center justify-start gap-1'>
+        <p>{instructions}</p>
+        {step === 1 ? <Link className='underline underline-offset-1 text-blue-600' href='https://www.alchemy.com/faucets/base-sepolia' target='_blank'>Alchemy Faucet</Link> : null}
+        {step === 2 ? <Link className='underline underline-offset-1 text-blue-600' href='https://faucet.circle.com/' target='_blank'>Circle Faucet</Link> : null}
+      </div>
+      {instructions2 ? <p>{instructions2}</p> : null}
+      
       {/* Chain */}
       <div className='mb-2 flex items-center justify-end gap-2'>
         <p className='text-gray-400'>{viemChain.name}</p>
