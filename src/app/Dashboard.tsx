@@ -17,6 +17,7 @@ import SmartAccount from '@/components/feature/SmartAccount';
 import SavingsAccount from '@/components/feature/SavingsAccount';
 import TransactionHistory from '@/components/feature/TransactionHistory';
 import Image from 'next/image';
+import { getTxHistoryFromLocalStorage, serializeTxHistoryItem } from '@/utils/txHistory';
 
 const defaultPluginState: TPluginState = {
   loading: true,
@@ -43,7 +44,7 @@ export default function Dashboard({
   walletAddress: Address;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { removeFromLocalStorage, getFromLocalStorage } = useLocalStorage();
+  const { removeFromLocalStorage, getFromLocalStorage, setInLocalStorage } = useLocalStorage();
 
   // State
   const [moduleState, setPluginState] = useState<TPluginState>(defaultPluginState);
@@ -65,7 +66,7 @@ export default function Dashboard({
 
   const [sendingToken, setSendingToken] = useState<boolean>(false);
   const [sendTokenAmount, setSendTokenAmount] = useState<bigint | undefined>(BigInt(1500000));
-  const [txHistory, setTxHistory] = useState<TTxHistoryItem[]>([]);
+  const [txHistory, setTxHistory] = useState<TTxHistoryItem[]>(getTxHistoryFromLocalStorage());
 
   // Hooks
   const { getModularAccountAlchemyClient, sendToken } = useSignWithAlchemy();
@@ -99,7 +100,13 @@ export default function Dashboard({
     setSendingToken(true);
     sendToken(extendedAccount, recipient as Address, sendTokenAmount)
       .then((txHistoryData) => {
-        setTxHistory((prev) => [...txHistoryData, ...prev]);
+        // save tranasaction history to local storage and update state
+        setTxHistory((prev) => {
+          const updatedTxHistory = [...txHistoryData, ...prev];
+          setInLocalStorage('txHistory', JSON.stringify(updatedTxHistory.map((tx: TTxHistoryItem) => (serializeTxHistoryItem(tx)))));
+          
+          return updatedTxHistory;
+        });
       })
       .finally(() => setSendingToken(false));
   };

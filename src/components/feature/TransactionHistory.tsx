@@ -16,7 +16,7 @@ export default function TransactionHistory({ txHistory }: { txHistory: TTxHistor
       </div> : <div className='mt-5'>
       {txHistory.map((tx, index) => (
           <Link href={`${blockExplorer}/tx/${tx.hash}`} target='_blank' key={`txHistory-${index}-${Math.random()}`}>
-            <div className='flex md:flex-row flex-col items-center justify-between border border-[#272727] rounded-md px-5 py-3 mb-2 gap-1'>
+            <div className='hover:bg-[#207f68]/10 flex md:flex-row flex-col items-center justify-between border border-gray-300 rounded-md px-5 py-3 mb-2 gap-1'>
               <div>
                 <p className='text-sm'>
                   From: <span className='font-semibold text-base mr-4'>{minifyAddress(tx.from)}</span>

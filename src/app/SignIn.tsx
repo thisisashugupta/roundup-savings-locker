@@ -13,7 +13,7 @@ export default function SignIn({ setModalOpen }: { setModalOpen: Dispatch<SetSta
         <span className='text-[#fdffff]'>RoundUp </span>
         <span className='text-[#8ddc42]'>Savings</span>
       </p>
-      <p className='mx-8 text-center max-w-[500px] mt-8 text-[##fdffff] font-light text-[18px]'>
+      <p className='mx-8 text-center max-w-[500px] mt-8 text-[#fdffff] font-light text-[18px]'>
         Save a little USDC every time you use your ERC-6900 compatible ERC-4337 wallet
       </p>
       <button
