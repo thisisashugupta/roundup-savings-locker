@@ -260,19 +260,6 @@ export default function Dashboard({
 
 
 
-    // if (!moduleState.installed) {
-    //   step = 1;
-    //   instructions = 'To get started, please install the RoundUp Savings Plugin to your Modular Smart Account.';
-    // } else if (!automationState.created) {
-    //   step = 2;
-    //   instructions = 'Next, create a savings account to start saving your spare change.';
-    // } else if (!savingsAddress) {
-    //   step = 3;
-    //   instructions = 'You can now create a savings account and set up automation to save your spare change.';
-    // } else {
-    //   step = 4;
-    //   instructions = 'You can now send tokens, view your transaction history, and manage your savings account.';
-    // }
   }
 
   
