@@ -1,6 +1,8 @@
-import { TPluginState, TAutomationState } from '@/types';
+import type { TPluginState, TAutomationState } from '@/types';
 import type { ChangeEvent } from 'react';
-import { Address } from 'viem';
+import type { Address } from 'viem';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function SavingsAccount({
   moduleState,
@@ -17,14 +19,16 @@ export default function SavingsAccount({
   automationState: TAutomationState;
   savingsTokenBalance: string;
   savingsAddress: string;
-  roundUpAmount: number;
+  roundUpAmount: bigint | undefined;
   setSavingsAddress: (address: string) => void;
-  setRoundUpAmount: (amount: number) => void;
+  setRoundUpAmount: (amount: bigint | undefined) => void;
   handleCreateAutomation: () => void;
   handleInstallPlugin: () => void;
 }) {
+  const roundUpAmountValue = roundUpAmount === undefined ? '' : String(Number(roundUpAmount) / 1e6);
+  
   return (
-    <div className='w-full h-full px-5 py-6 bg-[#1E1E1E] min-h-[335px] rounded-[16px] flex flex-col justify-between'>
+    <div className='w-full h-full px-5 py-6 min-h-[335px] rounded-[16px] flex flex-col justify-between text-black bg-[#dbe3ce]'>
       <div>
         <p className='text-sm text-[#646464]'>Savings Account</p>
         {moduleState.installed ? (
@@ -32,14 +36,14 @@ export default function SavingsAccount({
             {automationState.created && (
               <div className='mt-4'>
                 <p className='text-[#646464] text-lg'>Token Balance</p>
-                <p className='text-white text-[32px] font-bold'>{String(Number(savingsTokenBalance) / 1e6)} USDC</p>
+                <p className='text-[32px] font-bold'>{String(Number(savingsTokenBalance) / 1e6)} USDC</p>
               </div>
             )}
             <p className='mt-6 text-sm text-[#646464]'>
               {automationState.created ? 'Savings Address' : 'Enter Savings Address'}
             </p>
-            <input
-              className='w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white'
+            <Input
+              className='border-[#646464]/50'
               placeholder='0x...'
               type='text'
               value={savingsAddress}
@@ -49,34 +53,58 @@ export default function SavingsAccount({
             <p className='mt-2 text-sm text-[#646464]'>
               {automationState.created ? 'Roundup Amount' : 'Enter Roundup Amount'}
             </p>
-            <input
-              className='w-full mt-1 bg-[#1E1E1E] border border-[#272727] rounded-md px-2 py-1 text-white'
+            <Input
+              className='border-[#646464]/50'
               type='number'
-              value={roundUpAmount}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setRoundUpAmount(Number(e.target.value))}
+              value={roundUpAmountValue}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+
+                if (e.target.value === '') {
+                  setRoundUpAmount(BigInt(0));
+                  return;
+                }
+
+                const numberValue = Number(e.target.value);
+
+                if (Number.isNaN(numberValue)) {
+                  setRoundUpAmount(BigInt(0));
+                  return;
+                }
+
+                // 6 decimal places for USDC
+                if (Number(e.target.value) < 1/1e6) {
+                  setRoundUpAmount(BigInt(0));
+                  return;
+                }
+
+                const bigIntValue = BigInt(Math.floor(numberValue * 1e6));
+                setRoundUpAmount(bigIntValue);
+              }}
               readOnly={automationState.created}
             />
           </div>
         ) : (
           <div className='my-[90px] flex flex-col items-center justify-center'>
-            <p className='px-4 text-white text-sm text-center'>Install Locker Savings Plugin for saving your funds.</p>
+            <p className='px-4 text-xl text-center'>Install Savings Plugin<br/>and start saving</p>
           </div>
         )}
       </div>
 
       {!automationState.created && (
-        <button
-          className='w-full min-w-[0px] h-[46px] bg-[#8FC346] px-3 py-2 rounded-xl text-base text-black font-bold'
+        <Button
+          type='button'
+          className='w-full'
           onClick={moduleState.installed ? handleCreateAutomation : handleInstallPlugin}
+          disabled={moduleState.installing || automationState.creating}
         >
           {moduleState.installed
             ? automationState.creating
-              ? 'Creating Automation'
+              ? 'Creating Automation...'
               : 'Create Automation'
             : moduleState.installing
-              ? 'Installing Plugin'
+              ? 'Installing Plugin...'
               : 'Install Plugin'}
-        </button>
+        </Button>
       )}
     </div>
   );

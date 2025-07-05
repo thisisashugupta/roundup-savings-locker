@@ -3,6 +3,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import type { Address } from 'viem';
+import { isAddress } from 'viem';
 import { useState, useEffect } from 'react';
 import useSignWithAlchemy from '@/hooks/useSignWithAlchemy';
 import useSavingsPlugin from '@/hooks/useSavingsPlugin';
@@ -15,6 +16,8 @@ import ConnectedAccount from '@/components/feature/ConnectedAccount';
 import SmartAccount from '@/components/feature/SmartAccount';
 import SavingsAccount from '@/components/feature/SavingsAccount';
 import TransactionHistory from '@/components/feature/TransactionHistory';
+import Image from 'next/image';
+import { getTxHistoryFromLocalStorage, serializeTxHistoryItem } from '@/utils/txHistory';
 
 const defaultPluginState: TPluginState = {
   loading: true,
@@ -41,7 +44,7 @@ export default function Dashboard({
   walletAddress: Address;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { removeFromLocalStorage, getFromLocalStorage } = useLocalStorage();
+  const { removeFromLocalStorage, getFromLocalStorage, setInLocalStorage } = useLocalStorage();
 
   // State
   const [moduleState, setPluginState] = useState<TPluginState>(defaultPluginState);
@@ -58,12 +61,12 @@ export default function Dashboard({
   const [extendedAccount, setExtendedAccount] = useState<any>();
   const [savingsAddress, setSavingsAddress] = useState<Address | string>(getFromLocalStorage('savingsAddress') ?? '');
   const [savingsTokenBalance, setSavingsTokenBalance] = useState<string>('0');
-  const [roundUpAmount, setRoundUpAmount] = useState<number>(1000000);
+  const [roundUpAmount, setRoundUpAmount] = useState<bigint | undefined>(BigInt(1000000));
   const [recipient, setRecipient] = useState<Address | string>('');
 
   const [sendingToken, setSendingToken] = useState<boolean>(false);
-  const [sendTokenAmount, setSendTokenAmount] = useState<bigint>(BigInt(1500000));
-  const [txHistory, setTxHistory] = useState<TTxHistoryItem[]>([]);
+  const [sendTokenAmount, setSendTokenAmount] = useState<bigint | undefined>(BigInt(1500000));
+  const [txHistory, setTxHistory] = useState<TTxHistoryItem[]>(getTxHistoryFromLocalStorage());
 
   // Hooks
   const { getModularAccountAlchemyClient, sendToken } = useSignWithAlchemy();
@@ -79,30 +82,46 @@ export default function Dashboard({
 
   // Function Handlers
   const sendTokenUO = async () => {
-    if (recipient.length !== 42) {
-      toast.error('Invalid receipient address');
+    if (!recipient) {
+      toast.error('Recipient address is required');
+      return;
+    }
+
+    if (!isAddress(recipient)) {
+      toast.error('Invalid recipient address');
+      return;
+    }
+
+    if (!sendTokenAmount) {
+      toast.error('Amount is required');
       return;
     }
 
     setSendingToken(true);
     sendToken(extendedAccount, recipient as Address, sendTokenAmount)
       .then((txHistoryData) => {
-        setTxHistory((prev) => [...txHistoryData, ...prev]);
+        // save tranasaction history to local storage and update state
+        setTxHistory((prev) => {
+          const updatedTxHistory = [...txHistoryData, ...prev];
+          setInLocalStorage('txHistory', JSON.stringify(updatedTxHistory.map((tx: TTxHistoryItem) => (serializeTxHistoryItem(tx)))));
+          
+          return updatedTxHistory;
+        });
       })
       .finally(() => setSendingToken(false));
   };
 
   const handleCreateAutomation = async () => {
     if (!extendedAccount) {
-      toast.error('Extended Account not initialized');
+      toast.error('Extended account is not initialized');
     }
 
     if (!savingsAddress) {
-      toast.error('Savings Address is required');
+      toast.error('Savings address is required');
       return;
     }
 
-    const args: [Address, bigint] = [savingsAddress as Address, BigInt(1000000)];
+    const args: [Address, bigint] = [savingsAddress as Address, roundUpAmount ?? BigInt(0)];
 
     setAutomationState((prev) => ({ ...prev, creating: true }));
     createAutomation(extendedAccount, args).finally(() => {
@@ -150,6 +169,8 @@ export default function Dashboard({
     }
   };
 
+  // Create Modular Smart Account on Mount
+  // Savings will be taken from this account
   useEffect(() => {
     async function createMCSA() {
       const modularAccountClient = await getModularAccountAlchemyClient();
@@ -210,16 +231,23 @@ export default function Dashboard({
     <div className='p-6 md:p-12'>
       {/* Chain */}
       <div className='mb-2 flex items-center justify-end gap-2'>
-        <p>{viemChain.name}</p>
-        <button type='button' onClick={() => setModalOpen(true)}>
-          <img className='ml-auto' src='/chain-selector.svg' alt='wallet' aria-label={'wallet'} />
+        <p className='text-gray-400'>{viemChain.name}</p>
+        <button className='border rounded-[12px] border-gray-300' type='button' onClick={() => setModalOpen(true)}>
+          <div className='flex items-center justify-center gap-1'>
+            <Image width={16} height={16} className='ml-1 w-4 h-4' src='/Base_Symbol_Blue.svg' alt='wallet' aria-label={'wallet'} />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca1b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down-icon lucide-chevron-down">
+            <title>svggg</title>
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+          
         </button>
       </div>
 
       {/* Dashboard */}
       <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4'>
         {/* Top Card 1 */}
-        <div className='w-full w-[330px]'>
+        <div className='w-full'>
           <ConnectedAccount
             walletAddress={walletAddress}
             walletBalance={walletBalance}
@@ -229,12 +257,12 @@ export default function Dashboard({
 
         {/* Top Card 2 */}
 
-        <div className='w-full w-[330px]'>
+        <div className='w-full'>
           <SmartAccount mscaState={mscaState} />
         </div>
 
         {/* Top Card 3 */}
-        <div className='w-full w-[330px]'>
+        <div className='w-full'>
           <SavingsAccount
             moduleState={moduleState}
             automationState={automationState}
@@ -251,7 +279,7 @@ export default function Dashboard({
         <div className='w-full row-start-3 lg:row-start-2 col-span-1 md:col-span-2 2xl:col-span-3 '>
           <TransactionHistory txHistory={txHistory} />
         </div>
-        <div className='w-full 2xl:row-span-2 w-[330px]'>
+        <div className='w-full 2xl:row-span-2'>
           <ActionCenter
             handleInstallPlugin={handleInstallPlugin}
             moduleState={moduleState}

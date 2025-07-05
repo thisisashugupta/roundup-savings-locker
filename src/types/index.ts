@@ -19,6 +19,13 @@ export type TTxHistoryItem = {
   hash: string;
 };
 
+export type TTxHistoryItemForLocalStorage = {
+  amount: string;
+  from: string;
+  to: string;
+  hash: string;
+};
+
 export type TModularSmartAccountState = {
   address: Address | undefined;
   balance: string | undefined;

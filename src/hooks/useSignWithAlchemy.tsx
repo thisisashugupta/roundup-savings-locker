@@ -90,7 +90,6 @@ const useSignWithAlchemy = () => {
       });
 
       console.log('User Operation Hash:', res.hash);
-      toast.success('UserOp sent');
 
       let txHash;
 

@@ -1,6 +1,6 @@
 'use client';
 
-const isServer = typeof window === 'undefined' ? false : true;
+const isServer = typeof window === 'undefined';
 
 export function useLocalStorage() {
   function setInLocalStorage(key: string, value: string) {

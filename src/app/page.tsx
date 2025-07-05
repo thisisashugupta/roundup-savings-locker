@@ -11,7 +11,7 @@ export default function Page() {
   const { capsuleClient, isModalOpen, setModalOpen, userState } = useAuth();
 
   return (
-    <div className='min-h-screen w-full h-full flex flex-col items-center justify-center'>
+    <div className='min-h-[calc(100vh-8px)] w-full h-full flex flex-col items-center justify-center rounded-3xl'>
       {userState.loading ? (
         <video className='w-24 h-24' autoPlay loop muted playsInline>
           <source src='/loader.webm' type='video/webm' />

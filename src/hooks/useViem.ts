@@ -26,7 +26,6 @@ export default function useViem() {
       functionName: 'balanceOf',
       args: [address],
     });
-    console.log(balance);
     return balance;
   }
 
