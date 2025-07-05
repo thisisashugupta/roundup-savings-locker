@@ -1,5 +1,5 @@
 'use client';
-import { toast } from 'sonner';
+import { CopyButton } from './CopyButton';
 
 export default function ConnectedAccount({
   walletAddress,
@@ -31,15 +31,7 @@ export default function ConnectedAccount({
         <p className='text-sm'>
           {walletAddress ? walletAddress?.slice(0, 5) + '...' + walletAddress?.slice(-3) : 'loading...'}
         </p>
-        <button
-        type='button'
-          onClick={() => {
-            navigator.clipboard.writeText(walletAddress);
-            toast('Copied to clipboard');
-          }}
-        >
-          <img src='/copy.svg' />
-        </button>
+        <CopyButton text={walletAddress} />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { savingsPluginActions, SavingsPlugin, SavingsPluginAbi } from '@/plugins/savings/plugin';
 import { toast } from 'sonner';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 import { viemChain } from '@/config/chains';
 import { publicClient } from '../clients/publicViemClient';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -51,7 +51,6 @@ const useSavingsPlugin = () => {
       setInLocalStorage('automationCreated', Boolean(true).toString());
       setInLocalStorage('savingsAddress', args[0] as string);
       console.log('Automation created with userop hash:', res.hash);
-      toast.success(`Automation Creation initiated. UserOp Sent`);
 
       let txHash;
 
@@ -64,7 +63,7 @@ const useSavingsPlugin = () => {
         console.log('Waiting for txHash...');
         await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
       }
-      toast.success(`Tx mined.`);
+      toast.success('Automation Created');
 
       let txReceipt;
 
@@ -91,7 +90,6 @@ const useSavingsPlugin = () => {
         args: [],
       });
       console.log('Plugin Installed with userop hash:', result.hash);
-      toast.success(`Plugin Installation initiated. UserOp Sent`);
 
       let txHash;
 
@@ -104,7 +102,7 @@ const useSavingsPlugin = () => {
         console.log('Waiting for txHash...');
         await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
       }
-      toast.success(`Tx mined.`);
+      toast.success('Plugin installed');
 
       let txReceipt;
 
@@ -130,7 +128,6 @@ const useSavingsPlugin = () => {
         pluginAddress: savingsPluginAddress as `0x${string}`,
       });
       console.log('Plugin Uninstalled with userop hash:', result.hash);
-      toast.success(`Plugin Uninstallation initiated. UserOp Sent`);
       removeFromLocalStorage('automationCreated');
 
       let txHash;
@@ -144,7 +141,6 @@ const useSavingsPlugin = () => {
         console.log('Waiting for txHash...');
         await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before retrying
       }
-      toast.success(`Tx mined.`);
 
       let txReceipt;
 
@@ -157,6 +153,8 @@ const useSavingsPlugin = () => {
         console.log('Waiting for txReceipt...');
         await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
       }
+
+      toast.success('Plugin uninstalled');
     } catch (e) {
       toast.error('Plugin Uninstallation Failed (check console)');
       console.error('Plugin Uninstallation Failed', e);
