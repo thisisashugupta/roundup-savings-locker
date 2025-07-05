@@ -1,14 +1,13 @@
 # 🧠 Roundup Savings
 
-**Roundup Savings** is a minimal web app that demonstrates how to install Locker’s *round-up savings module* on a smart account using Account Abstraction (ERC‑4337/7579). It lets users connect a wallet, deploy a smart account, and install a savings automation plugin — enabling automatic micro-savings on every transaction.
+**Roundup Savings** is a minimal web app that demonstrates how to install Locker’s *round-up savings module* on a smart account using Account Abstraction (ERC‑4337/6900). It lets users connect a wallet, deploy a smart account, and install a savings automation plugin — enabling automatic micro-savings on every transaction.
 
 Built with **Next.js**, **Viem**, **Capsule**, and **AccountKit**, the project integrates modular accounts and Locker's ERC‑6900 savings logic.
 
 ## 🚀 Features
 
 * 🔐 Connect Ethereum wallet via Capsule
-* 🧱 Deploy a smart account (ERC‑7579)
-* 💰 Install Locker's savings plugin
+* 💰 Install Locker's savings plugin (ERC-6900)
 * 📊 View wallet and smart account balances
 
 ## 🛠️ Setup
@@ -55,7 +54,7 @@ Go to [http://localhost:3000](http://localhost:3000)
 
 * **Frontend:** Next.js 14, React, Tailwind CSS
 * **Wallet:** Capsule SDK
-* **Blockchain:** Alchemy + Viem, ERC-7579 plugins
+* **Blockchain:** Alchemy + Viem, ERC-6900 plugins
 * **Smart Modules:** Locker savings automation
 
 ## 📄 License
