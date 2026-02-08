@@ -1,7 +1,7 @@
 export const paths = {
   LANDING: '/',
   DOCS: 'https://docs.locker.money',
-  GITHUB: 'https://github.com/locker-labs',
+  GITHUB: 'https://github.com/locker-labs/savings-module',
   CONTACT_EMAIL: 'contact@locker.money',
   LOCKER_MONEY: 'https://locker.money',
 };
